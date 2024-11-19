@@ -1,0 +1,119 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model apartamentos {
+  id             Int     @id @default(autoincrement())
+  titulo         String  @db.VarChar(255)
+  descripcion    String? @db.Text
+  ubicacion      String? @db.VarChar(255)
+  disponibilidad Boolean
+  imagen         String? @db.VarChar(255)
+  precio         Decimal @db.Decimal(10, 2)
+}
+
+model calificaciones {
+  id                 Int       @id @default(autoincrement())
+  apartamento_id     Int?
+  usuario_id         Int?
+  puntuacion         Int
+  comentario         String?   @db.Text
+  fecha_calificacion DateTime? @default(now()) @db.Timestamp(0)
+  username           String?   @db.VarChar(255)
+
+  @@index([apartamento_id], map: "apartamento_id")
+  @@index([usuario_id], map: "usuario_id")
+}
+
+model comentarios {
+  id               Int       @id @default(autoincrement())
+  apartamento_id   Int
+  usuario_id       Int
+  comentario       String    @db.Text
+  fecha_comentario DateTime? @default(now()) @db.Timestamp(0)
+  username         String?   @db.VarChar(255)
+
+  @@index([apartamento_id], map: "apartamento_id")
+  @@index([usuario_id], map: "usuario_id")
+}
+
+model favoritos {
+  id             Int       @id @default(autoincrement())
+  usuario_id     Int
+  apartamento_id Int
+  fecha_agregado DateTime? @default(now()) @db.Timestamp(0)
+
+  @@index([apartamento_id], map: "apartamento_id")
+  @@index([usuario_id], map: "usuario_id")
+}
+
+model imagenes_apartamento {
+  id             Int       @id @default(autoincrement())
+  apartamento_id Int
+  url_imagen     String    @db.VarChar(255)
+  fecha_subida   DateTime? @default(now()) @db.Timestamp(0)
+
+  @@index([apartamento_id], map: "apartamento_id")
+}
+
+model mensajes {
+  id                                          Int       @id @default(autoincrement())
+  remitente_id                                Int?
+  destinatario_id                             Int?
+  mensaje                                     String    @db.Text
+  fecha_mensaje                               DateTime? @default(now()) @db.Timestamp(0)
+  usuarios_mensajes_remitente_idTousuarios    usuarios? @relation("mensajes_remitente_idTousuarios", fields: [remitente_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "mensajes_ibfk_1")
+  usuarios_mensajes_destinatario_idTousuarios usuarios? @relation("mensajes_destinatario_idTousuarios", fields: [destinatario_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "mensajes_ibfk_2")
+
+  @@index([destinatario_id], map: "destinatario_id")
+  @@index([remitente_id], map: "remitente_id")
+}
+
+model pagos {
+  id          Int               @id @default(autoincrement())
+  reserva_id  Int
+  monto       Decimal           @db.Decimal(10, 2)
+  metodo_pago pagos_metodo_pago
+  fecha_pago  DateTime?         @default(now()) @db.Timestamp(0)
+
+  @@index([reserva_id], map: "reserva_id")
+}
+
+model reservas {
+  id             Int     @id @default(autoincrement())
+  State          Boolean
+  user_id        Int
+  apartamento_id Int
+
+  @@index([apartamento_id], map: "apartamento_id")
+  @@index([user_id], map: "user_id")
+}
+
+model ubicaciones {
+  id             Int       @id @default(autoincrement())
+  nombre         String    @db.VarChar(255)
+  descripcion    String    @db.Text
+  fecha_creacion DateTime? @default(now()) @db.Timestamp(0)
+}
+
+model usuarios {
+  id                                          Int        @id @default(autoincrement())
+  UserName                                    String     @unique(map: "UserName") @db.VarChar(255)
+  Name                                        String     @db.VarChar(255)
+  Password                                    String     @db.VarChar(255)
+  Email                                       String     @unique(map: "Email") @db.VarChar(255)
+  Phone                                       String?    @db.VarChar(20)
+  mensajes_mensajes_remitente_idTousuarios    mensajes[] @relation("mensajes_remitente_idTousuarios")
+  mensajes_mensajes_destinatario_idTousuarios mensajes[] @relation("mensajes_destinatario_idTousuarios")
+}
+
+enum pagos_metodo_pago {
+  tarjeta
+  transferencia
+  paypal
+}
